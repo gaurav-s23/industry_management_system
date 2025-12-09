@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+backend/venv/
+
+# SQLite database file
+backend/industry_app/industry.db
+
+# Environment variables (future)
+.env
+
+# VS Code folder
+.vscode/
+
+# macOS & Windows junk (ignore if not needed)
+.DS_Store
+Thumbs.db
