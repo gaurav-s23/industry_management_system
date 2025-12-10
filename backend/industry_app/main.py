@@ -1,26 +1,55 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from industry_app.db import get_db, create_tables
-from industry_app.services.material_service import (
-    create_material, get_materials, get_material,
-    update_material, delete_material
+
+# ----------------- Initialize App -----------------
+app = FastAPI(title="Industry Production & Inventory API 🚀")
+
+# ----------------- Enable CORS for Frontend -----------------
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-app = FastAPI()
-
 @app.on_event("startup")
-def startup_event():
+def on_startup():
     create_tables()
+
 
 @app.get("/")
 def root():
     return {"message": "Industry App Backend Running 🚀"}
 
-# ---------- Material Routes ----------
+
+# ======================================================
+#                      MATERIAL API
+# ======================================================
+
+from industry_app.services.material_service import (
+    create_material, get_materials, get_material,
+    update_material, delete_material
+)
+
+from pydantic import BaseModel
+
+class MaterialInput(BaseModel):
+    name: str
+    unit: str
+    description: str = ""
 
 @app.post("/materials")
-def add_material(name: str, unit: str, description: str = "", db: Session = Depends(get_db)):
-    return create_material(db, name, unit, description)
+def add_material(data: MaterialInput, db: Session = Depends(get_db)):
+    return create_material(db, data.name, data.unit, data.description)
 
 @app.get("/materials")
 def all_materials(db: Session = Depends(get_db)):
@@ -39,9 +68,9 @@ def remove(material_id: int, db: Session = Depends(get_db)):
     return delete_material(db, material_id)
 
 
-
-
-# ---------- Product Routes ----------
+# ======================================================
+#                      PRODUCT API
+# ======================================================
 
 from industry_app.services.product_service import (
     create_product, get_products, get_product,
@@ -69,9 +98,9 @@ def remove_product(product_id: int, db: Session = Depends(get_db)):
     return delete_product(db, product_id)
 
 
-
-
-# ---------- Production Orders Routes ----------
+# ======================================================
+#                  PRODUCTION ORDERS API
+# ======================================================
 
 from industry_app.services.production_service import (
     create_order, get_orders, get_order, update_order_status
@@ -94,9 +123,9 @@ def change_status(order_id: int, status: str, db: Session = Depends(get_db)):
     return update_order_status(db, order_id, status)
 
 
-
-
-# ---------- Production Log Routes ----------
+# ======================================================
+#                  PRODUCTION LOGS API
+# ======================================================
 
 from industry_app.services.production_service import (
     add_production_log, get_logs
@@ -111,7 +140,9 @@ def all_logs(db: Session = Depends(get_db)):
     return get_logs(db)
 
 
-
+# ======================================================
+#                      WORKER API
+# ======================================================
 
 from industry_app.services.worker_service import (
     create_worker, get_workers, get_worker
@@ -130,6 +161,9 @@ def one_worker(worker_id: int, db: Session = Depends(get_db)):
     return get_worker(db, worker_id)
 
 
+# ======================================================
+#                      REPORTS API
+# ======================================================
 
 from industry_app.services.report_service import (
     low_stock_materials,
